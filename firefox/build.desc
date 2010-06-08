@@ -1,0 +1,79 @@
+java_library(name = "firefox",
+  srcs = [ "src/java/**/*.java"],
+  resources = [
+    ":webdriver",
+    { ":noblur" : "x86/x_ignore_nofocus.so" },
+    { ":noblur64" : "amd64/x_ignore_nofocus.so" }
+  ],
+  deps = [
+    "//remote/client"
+  ])
+
+java_test(name = "test",
+  srcs  = [ "test/java/**/*.java" ],
+  deps = [
+    ":firefox",
+    "//remote/client:test"
+  ])
+
+ruby_test(
+  srcs = [
+    "common/test/rb/spec/**/*_spec.rb",
+    "firefox/test/rb/spec/**/*_spec.rb"
+  ],
+  include = [
+    "firefox/src/rb/lib",
+    "remote/client/src/rb/lib"
+  ],
+  driver_name = "firefox"
+)
+
+mozilla_xpt(name = "native_events_xpt",
+  srcs = [ "src/cpp/webdriver-firefox/nsINativeEvents.idl" ])
+
+mozilla_xpt(name = "command_processor_xpt",
+  srcs = [ "src/extension/idl/nsICommandProcessor.idl" ])
+
+mozilla_xpt(name = "response_handler_xpt",
+  srcs = [ "src/extension/idl/nsIResponseHandler.idl" ])
+
+mozilla_extension(name = "webdriver",
+  content = [
+    "src/extension/content/**/*.js",
+    "src/extension/content/fxdriver.xul",
+    "//common:dom_messenger"
+  ],
+  components = [
+    "src/extension/components/*.js",
+    ":native_events_xpt",
+    ":command_processor_xpt",
+    ":response_handler_xpt"
+  ],
+  resources = [
+    { ":firefox_dll" : "platform/WINNT_x86-msvc/components/webdriver-firefox.dll" },
+    { ":libwebdriver_firefox_so" : "platform/Linux_x86-gcc3/components/libwebdriver-firefox.so" },
+    { ":libwebdriver_firefox_so64" : "platform/Linux_x86_64-gcc3/components/libwebdriver-firefox.so" }
+  ],
+  chrome = "src/extension/chrome.manifest",
+  install = "src/extension/install.rdf")
+
+gcc_library(name = "noblur",
+  srcs = [ "src/cpp/linux-specific/*.c" ],
+  arch = "i386")
+
+gcc_library(name = "noblur64",
+  srcs = [ "src/cpp/linux-specific/*.c" ],
+  arch = "amd64")
+
+# Temporary rules while we migrate
+rake_task(name = "firefox_dll",
+  task_name = "firefox_dll",
+  out = "build/Win32/Release/webdriver-firefox.dll")
+
+rake_task(name = "libwebdriver_firefox_so",
+  task_name = "libwebdriver_firefox_so",
+  out = "build/linux/Release/libwebdriver-firefox.so")
+
+rake_task(name = "libwebdriver_firefox_so64",
+  task_name = "libwebdriver_firefox_so64",
+  out = "build/linux64/Release/libwebdriver-firefox.so")

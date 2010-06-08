@@ -1,0 +1,42 @@
+java_library(name = "client",
+  srcs = [ "src/java/**/*.java" ],
+  deps = [
+           "//common",
+           "//remote/common",
+           "//third_party/java/commons-httpclient",
+           "//third_party/java/commons-collections",
+           "//third_party/java/commons-lang",
+           "//third_party/java/commons-logging",
+           "//third_party/java/commons-io"
+         ])
+
+java_library(name = "test",
+  srcs = [ "src/java/**/*.java" ],
+  deps = [
+    ":client",
+    "//remote/common:test"
+  ])
+
+java_library(name = "combined",
+  deps = [
+    ":client",
+    "//chrome",
+    "//firefox",
+    "//htmlunit",
+    "//jobbie",
+    "//selenium",
+    "//support"
+  ])
+
+ruby_test(
+  srcs = [
+    "common/test/rb/spec/**/*_spec.rb",
+    "remote/client/test/rb/spec/**/*_spec.rb"
+  ],
+  include = ["remote/client/src/rb/lib"],
+  deps = [
+    "//remote/server:server",
+    "//remote/server:test"
+  ],
+  driver_name = "remote"
+)
